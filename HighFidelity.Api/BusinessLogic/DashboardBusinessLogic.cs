@@ -1,11 +1,10 @@
-using HighFidelity.Api.DTOs;
-using HighFidelity.Api.Mappings;
+using HighFidelity.Api.Models;
 using HighFidelity.Api.Repositories;
 
 namespace HighFidelity.Api.BusinessLogic;
 
 /// <summary>
-/// Business Logic layer. Validates inputs, enforces rules, maps entities to DTOs.
+/// Business Logic layer. Validates inputs and enforces rules.
 /// Controllers delegate here — this is where enterprise rules live.
 /// </summary>
 public class DashboardBusinessLogic : IDashboardBusinessLogic
@@ -14,37 +13,22 @@ public class DashboardBusinessLogic : IDashboardBusinessLogic
 
     public DashboardBusinessLogic(IDashboardRepository repository) => _repository = repository;
 
-    public async Task<IReadOnlyList<DashboardCardDto>> GetDashboardCardsAsync()
-    {
-        var cards = await _repository.GetDashboardCardsAsync();
-        return cards.Select(c => c.ToDto()).ToList();
-    }
+    public Task<IReadOnlyList<DashboardCard>> GetDashboardCardsAsync() =>
+        _repository.GetDashboardCardsAsync();
 
-    public async Task<IReadOnlyList<RevenueCardDto>> GetRevenueCardsAsync()
-    {
-        var cards = await _repository.GetRevenueCardsAsync();
-        return cards.Select(c => c.ToDto()).ToList();
-    }
+    public Task<IReadOnlyList<RevenueCard>> GetRevenueCardsAsync() =>
+        _repository.GetRevenueCardsAsync();
 
-    public async Task<IReadOnlyList<ActivityDto>> GetActivitiesAsync()
-    {
-        var activities = await _repository.GetActivitiesAsync();
-        return activities.Select(a => a.ToDto()).ToList();
-    }
+    public Task<IReadOnlyList<Activity>> GetActivitiesAsync() =>
+        _repository.GetActivitiesAsync();
 
-    public async Task<IReadOnlyList<OrderDto>> GetOrdersAsync()
-    {
-        var orders = await _repository.GetOrdersAsync();
-        return orders.Select(o => o.ToDto()).ToList();
-    }
+    public Task<IReadOnlyList<Order>> GetOrdersAsync() =>
+        _repository.GetOrdersAsync();
 
-    public async Task<IReadOnlyList<TrafficDto>> GetTrafficSourcesAsync()
-    {
-        var sources = await _repository.GetTrafficSourcesAsync();
-        return sources.Select(s => s.ToDto()).ToList();
-    }
+    public Task<IReadOnlyList<TrafficSource>> GetTrafficSourcesAsync() =>
+        _repository.GetTrafficSourcesAsync();
 
-    public async Task<OrderDto> AddOrderAsync(string customer, string country, decimal price, string status)
+    public async Task<Order> AddOrderAsync(string customer, string country, decimal price, string status)
     {
         // ── Business validation ──
         if (string.IsNullOrWhiteSpace(customer))
@@ -62,8 +46,7 @@ public class DashboardBusinessLogic : IDashboardBusinessLogic
         // - Enforce max order quantity per customer
         // - Log audit trail
 
-        var order = await _repository.AddOrderAsync(customer, country, price, status);
-        return order.ToDto();
+        return await _repository.AddOrderAsync(customer, country, price, status);
     }
 
     public async Task<(bool Success, int Deleted, string? Error)> DeleteOrdersAsync(IReadOnlyList<int> orderIds)

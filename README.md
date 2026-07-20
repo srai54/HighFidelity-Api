@@ -11,9 +11,8 @@ Controllers/    → HTTP in/out only. Parses requests, calls BusinessLogic, form
 BusinessLogic/  → BL layer: validation, orchestration (Controller → BusinessLogic).
 Repositories/   → EF Core data access only (BusinessLogic → Repository).
 Data/           → AppDbContext — EF Core model configuration.
-Models/         → EF Core entities, mirror the SQL tables.
-DTOs/           → Wire contracts returned to clients (never the raw entities).
-Mappings/       → Manual entity → DTO conversion.
+Models/         → EF Core entities, mirror the SQL tables — returned directly by dashboard endpoints.
+DTOs/           → Wire shapes that genuinely differ from an entity (NewOrderRequest, LoginRequestDto/LoginResponseDto) — not one per entity, see docs/ARCHITECTURE.md.
 Configuration/  → Strongly-typed options bound from appsettings.json (Jwt).
 Migrations/     → EF Core schema history.
 ```

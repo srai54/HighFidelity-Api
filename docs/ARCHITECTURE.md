@@ -11,7 +11,7 @@ HTTP request
 Controller            (Controllers/)      — HTTP in/out only: parse request, call BL, shape response
     │
     ▼
-Business Logic (BL)    (BusinessLogic/)    — validation, orchestration, DTO mapping
+Business Logic (BL)    (BusinessLogic/)    — validation, orchestration
     │
     ▼
 Repository             (Repositories/)     — EF Core queries only, no business rules
@@ -40,16 +40,24 @@ The trade-off is more files for a small project. For a dashboard with one entity
 | Folder | Owns | Never contains |
 |---|---|---|
 | `Controllers/` | Route attributes, `[Authorize]`, HTTP status codes | EF Core calls, validation logic |
-| `BusinessLogic/` | Input validation, business rules, entity → DTO mapping calls | `DbContext`, SQL, HTTP concerns |
-| `Repositories/` | `DbContext` queries (`AsNoTracking()` for reads), CRUD | Validation, DTOs |
+| `BusinessLogic/` | Input validation, business rules | `DbContext`, SQL, HTTP concerns |
+| `Repositories/` | `DbContext` queries (`AsNoTracking()` for reads), CRUD | Validation |
 | `Data/` | `AppDbContext`, EF model configuration (keys, relationships) | Query logic |
-| `Models/` | EF Core entities — mirror the SQL tables exactly | Wire-format concerns (camelCase, nullability contracts) |
-| `DTOs/` | Wire contracts returned to/from clients | EF Core attributes, navigation properties |
-| `Mappings/` | Manual `Entity → Dto` extension methods | Business rules |
+| `Models/` | EF Core entities — mirror the SQL tables exactly, and are what the dashboard endpoints return directly | Sensitive fields returned to clients (see `User.PasswordHash` below) |
+| `DTOs/` | Wire contracts that are genuinely *not* shaped like an entity: `NewOrderRequest` (excludes server-assigned `Id`/`Invoice`), `LoginRequestDto`/`LoginResponseDto` (auth has no matching entity to reuse) | A DTO for every entity "just in case" |
 | `Configuration/` | Strongly-typed `IOptions<T>` classes bound from `appsettings.json` | Values themselves (those live in config) |
 | `Migrations/` | EF Core schema history | Hand-edited SQL |
 
-`Models` and `DTOs` are deliberately separate types even though several of them look identical field-for-field today. Returning entities directly from a controller is a common shortcut that becomes a liability the moment the EF entity needs a field the client shouldn't see (audit columns, internal flags) — the DTO boundary is what prevents that leak later, at the cost of writing (currently trivial) mapping code now.
+### Why entities are returned directly instead of DTOs everywhere
+
+Every read endpoint (`cards`, `revenue-cards`, `activities`, `orders`, `traffic`) used to map its entity to an identically-shaped DTO before returning it — same properties, same types, a mapping method that copied one into the other. That bought nothing: there was no divergence to protect against, so it was ceremony, not a safety boundary. It's been removed; `DashboardController` now returns `Models` (`Order`, `DashboardCard`, etc.) straight from the business logic layer.
+
+This isn't "DTOs are pointless" — it's "a DTO earns its place by actually differing from the entity, not by existing on principle." Two things in this codebase still do:
+
+- **`NewOrderRequest`** — deliberately *not* `Order`. It omits `Id` and `Invoice` because those are server-assigned; if the create-order endpoint accepted an `Order` directly, a client could set its own `Id`/`Invoice` and nothing would stop it.
+- **`LoginRequestDto`/`LoginResponseDto`** — there's no `Order`-style entity these could piggyback on; a JWT + expiry isn't a database row.
+
+The general rule this leaves behind: reach for a DTO when the wire shape needs to *differ* from storage (hide a field, reshape a request, represent something that isn't a row at all) — not by default for every entity. If a dashboard entity later grows an internal-only column (an audit flag, a soft-delete bit), that's the point at which it gets a DTO, not before. `Models/User.cs` is the one entity where this matters today even without a dedicated DTO: it holds `PasswordHash`, and no endpoint returns a `User` — `AuthBusinessLogic` returns `LoginResponseDto` instead, so the hash can't leak by accident. That's the actual boundary worth protecting; duplicating five identical read-only shapes wasn't.
 
 ## Authentication
 

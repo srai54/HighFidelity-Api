@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HighFidelity.Api.DTOs;
+using HighFidelity.Api.Models;
 using HighFidelity.Api.BusinessLogic;
 
 namespace HighFidelity.Api.Controllers;
@@ -22,7 +23,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Returns KPI summary cards (wallet balance, referrals, etc.).</summary>
     [HttpGet("cards")]
-    public async Task<ActionResult<IReadOnlyList<DashboardCardDto>>> GetDashboardCards()
+    public async Task<ActionResult<IReadOnlyList<DashboardCard>>> GetDashboardCards()
     {
         var cards = await _service.GetDashboardCardsAsync();
         return Ok(cards);
@@ -30,7 +31,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Returns revenue analytics cards with chart metadata.</summary>
     [HttpGet("revenue-cards")]
-    public async Task<ActionResult<IReadOnlyList<RevenueCardDto>>> GetRevenueCards()
+    public async Task<ActionResult<IReadOnlyList<RevenueCard>>> GetRevenueCards()
     {
         var cards = await _service.GetRevenueCardsAsync();
         return Ok(cards);
@@ -38,7 +39,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Returns the activity timeline feed.</summary>
     [HttpGet("activities")]
-    public async Task<ActionResult<IReadOnlyList<ActivityDto>>> GetActivities()
+    public async Task<ActionResult<IReadOnlyList<Activity>>> GetActivities()
     {
         var activities = await _service.GetActivitiesAsync();
         return Ok(activities);
@@ -46,7 +47,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Returns paginated orders with search support.</summary>
     [HttpGet("orders")]
-    public async Task<ActionResult<IReadOnlyList<OrderDto>>> GetOrders()
+    public async Task<ActionResult<IReadOnlyList<Order>>> GetOrders()
     {
         var orders = await _service.GetOrdersAsync();
         return Ok(orders);
@@ -54,7 +55,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Creates a new order. Invoice number is auto-assigned server-side.</summary>
     [HttpPost("orders")]
-    public async Task<ActionResult<OrderDto>> AddOrder([FromBody] NewOrderRequest request)
+    public async Task<ActionResult<Order>> AddOrder([FromBody] NewOrderRequest request)
     {
         try
         {
@@ -83,7 +84,7 @@ public class DashboardController : ControllerBase
 
     /// <summary>Returns traffic source distribution data.</summary>
     [HttpGet("traffic")]
-    public async Task<ActionResult<IReadOnlyList<TrafficDto>>> GetTrafficSources()
+    public async Task<ActionResult<IReadOnlyList<TrafficSource>>> GetTrafficSources()
     {
         var sources = await _service.GetTrafficSourcesAsync();
         return Ok(sources);
