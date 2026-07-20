@@ -92,6 +92,10 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "HighFidelity.Api v1"));
 
+// Bare root has no page of its own — send visitors to the interactive docs
+// instead of a bare 404.
+app.MapGet("/", () => Results.Redirect("/swagger"));
+
 // ── Centralized error handling ──
 // Any exception that escapes a controller (DB unreachable, unexpected bug)
 // is converted to a consistent JSON error instead of leaking a raw stack
