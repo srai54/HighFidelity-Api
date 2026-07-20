@@ -15,20 +15,22 @@ public class DashboardRepository : IDashboardRepository
 
     public DashboardRepository(AppDbContext db) => _db = db;
 
+    // AsNoTracking: these are read-only projections with no intent to update the
+    // entities, so EF Core can skip building change-tracking snapshots for them.
     public async Task<IReadOnlyList<DashboardCard>> GetDashboardCardsAsync() =>
-        await _db.DashboardCards.OrderBy(c => c.Id).ToListAsync();
+        await _db.DashboardCards.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
 
     public async Task<IReadOnlyList<RevenueCard>> GetRevenueCardsAsync() =>
-        await _db.RevenueCards.OrderBy(c => c.Id).ToListAsync();
+        await _db.RevenueCards.AsNoTracking().OrderBy(c => c.Id).ToListAsync();
 
     public async Task<IReadOnlyList<Activity>> GetActivitiesAsync() =>
-        await _db.Activities.OrderBy(a => a.Id).ToListAsync();
+        await _db.Activities.AsNoTracking().OrderBy(a => a.Id).ToListAsync();
 
     public async Task<IReadOnlyList<Order>> GetOrdersAsync() =>
-        await _db.Orders.OrderBy(o => o.Id).ToListAsync();
+        await _db.Orders.AsNoTracking().OrderBy(o => o.Id).ToListAsync();
 
     public async Task<IReadOnlyList<TrafficSource>> GetTrafficSourcesAsync() =>
-        await _db.TrafficSources.OrderBy(t => t.Id).ToListAsync();
+        await _db.TrafficSources.AsNoTracking().OrderBy(t => t.Id).ToListAsync();
 
     public async Task<Order?> GetOrderByIdAsync(int id) =>
         await _db.Orders.FindAsync(id);
