@@ -7,22 +7,26 @@ This repo was split out of the MAUI app's monorepo once the backend became its o
 ## Architecture
 
 ```
-Controllers/    → HTTP in/out only. Parses requests, calls Services, formats responses.
-Services/       → Business logic: validation, orchestration (Controller → Service).
-Repositories/   → EF Core data access only (Service → Repository).
+Controllers/    → HTTP in/out only. Parses requests, calls BusinessLogic, formats responses.
+BusinessLogic/  → BL layer: validation, orchestration (Controller → BusinessLogic).
+Repositories/   → EF Core data access only (BusinessLogic → Repository).
 Data/           → AppDbContext — EF Core model configuration.
 Models/         → EF Core entities, mirror the SQL tables.
 DTOs/           → Wire contracts returned to clients (never the raw entities).
 Mappings/       → Manual entity → DTO conversion.
+Configuration/  → Strongly-typed options bound from appsettings.json (Jwt, DemoUser).
 Migrations/     → EF Core schema history.
 ```
 
-Each arrow is an interface (`IDashboardService`, `IDashboardRepository`), so every layer is independently testable and swappable.
+Each arrow is an interface (`IDashboardBusinessLogic`, `IDashboardRepository`), so every layer is independently testable and swappable. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full why/what, and [docs/INTERVIEW_QUESTIONS.md](docs/INTERVIEW_QUESTIONS.md) for a Q&A walkthrough of the design decisions.
 
 ## Endpoints
 
+All `/api/dashboard/*` endpoints require a JWT — see [Authentication](#authentication) below.
+
 | Endpoint | Description |
 |---|---|
+| `POST /api/auth/login` | Exchange username/password for a JWT |
 | `GET /api/dashboard/cards` | Summary KPI cards |
 | `GET /api/dashboard/revenue-cards` | Revenue analytics cards |
 | `GET /api/dashboard/activities` | Activity timeline |
@@ -32,7 +36,13 @@ Each arrow is an interface (`IDashboardService`, `IDashboardRepository`), so eve
 | `GET /api/dashboard/traffic` | Traffic source distribution |
 | `GET /health` | Readiness probe — checks actual DB connectivity |
 
+## Authentication
+
+`POST /api/auth/login` with the demo account (`DemoUser` in `appsettings.json`, default `admin` / `ChangeMe123!`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication).
+
 ## Running locally
+
+See [docs/RUNNING_IN_VISUAL_STUDIO.md](docs/RUNNING_IN_VISUAL_STUDIO.md) for the full Visual Studio walkthrough (seeding the DB, running both this API and the MAUI client, logging in). Quick version:
 
 ```powershell
 # 1. Seed the database (SQL Server / LocalDB)

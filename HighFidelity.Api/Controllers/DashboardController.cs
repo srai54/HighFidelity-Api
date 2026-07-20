@@ -1,22 +1,24 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HighFidelity.Api.DTOs;
-using HighFidelity.Api.Services;
+using HighFidelity.Api.BusinessLogic;
 
 namespace HighFidelity.Api.Controllers;
 
 /// <summary>
 /// RESTful API for the HighFidelity dashboard.
 /// Controllers are thin — they parse the HTTP request, delegate to
-/// the service layer, and format the HTTP response.
+/// the business logic layer, and format the HTTP response.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/dashboard")]
 [Produces("application/json")]
 public class DashboardController : ControllerBase
 {
-    private readonly IDashboardService _service;
+    private readonly IDashboardBusinessLogic _service;
 
-    public DashboardController(IDashboardService service) => _service = service;
+    public DashboardController(IDashboardBusinessLogic service) => _service = service;
 
     /// <summary>Returns KPI summary cards (wallet balance, referrals, etc.).</summary>
     [HttpGet("cards")]

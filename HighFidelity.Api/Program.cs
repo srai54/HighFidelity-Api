@@ -1,8 +1,12 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using HighFidelity.Api.Configuration;
 using HighFidelity.Api.Data;
 using HighFidelity.Api.Repositories;
-using HighFidelity.Api.Services;
+using HighFidelity.Api.BusinessLogic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,9 +30,35 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // ── Dependency Injection — Layered Architecture ──
 // Each layer depends on the one below it through interfaces:
-//   Controller → Service (BL) → Repository → DbContext → SQL Server
+//   Controller → BusinessLogic (BL) → Repository → DbContext → SQL Server
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IDashboardBusinessLogic, DashboardBusinessLogic>();
+builder.Services.AddScoped<IAuthBusinessLogic, AuthBusinessLogic>();
+
+// ── JWT Authentication ──
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.Configure<DemoUserOptions>(builder.Configuration.GetSection(DemoUserOptions.SectionName));
+
+var jwtOptions = jwtSection.Get<JwtOptions>()
+    ?? throw new InvalidOperationException("Configuration section 'Jwt' is missing.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -47,6 +77,9 @@ app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
         detail = app.Environment.IsDevelopment() ? feature?.Error.Message : null
     });
 }));
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

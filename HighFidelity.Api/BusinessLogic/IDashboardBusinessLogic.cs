@@ -1,13 +1,13 @@
 using HighFidelity.Api.DTOs;
 
-namespace HighFidelity.Api.Services;
+namespace HighFidelity.Api.BusinessLogic;
 
 /// <summary>
-/// Service (Business Logic) interface.
+/// Business Logic (BL) interface.
 /// This layer owns validation, orchestration, and cross-cutting concerns —
 /// the controllers stay thin and delegate here.
 /// </summary>
-public interface IDashboardService
+public interface IDashboardBusinessLogic
 {
     Task<IReadOnlyList<DashboardCardDto>> GetDashboardCardsAsync();
     Task<IReadOnlyList<RevenueCardDto>> GetRevenueCardsAsync();

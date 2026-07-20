@@ -2,17 +2,17 @@ using HighFidelity.Api.DTOs;
 using HighFidelity.Api.Mappings;
 using HighFidelity.Api.Repositories;
 
-namespace HighFidelity.Api.Services;
+namespace HighFidelity.Api.BusinessLogic;
 
 /// <summary>
 /// Business Logic layer. Validates inputs, enforces rules, maps entities to DTOs.
 /// Controllers delegate here — this is where enterprise rules live.
 /// </summary>
-public class DashboardService : IDashboardService
+public class DashboardBusinessLogic : IDashboardBusinessLogic
 {
     private readonly IDashboardRepository _repository;
 
-    public DashboardService(IDashboardRepository repository) => _repository = repository;
+    public DashboardBusinessLogic(IDashboardRepository repository) => _repository = repository;
 
     public async Task<IReadOnlyList<DashboardCardDto>> GetDashboardCardsAsync()
     {
