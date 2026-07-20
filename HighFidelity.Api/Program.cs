@@ -34,12 +34,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //   Controller → BusinessLogic (BL) → Repository → DbContext → SQL Server
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashboardBusinessLogic, DashboardBusinessLogic>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthBusinessLogic, AuthBusinessLogic>();
 
 // ── JWT Authentication ──
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 builder.Services.Configure<JwtOptions>(jwtSection);
-builder.Services.Configure<DemoUserOptions>(builder.Configuration.GetSection(DemoUserOptions.SectionName));
 
 var jwtOptions = jwtSection.Get<JwtOptions>()
     ?? throw new InvalidOperationException("Configuration section 'Jwt' is missing.");

@@ -1,7 +1,7 @@
 -- =============================================================================
 -- HighFidelity dashboard schema + dummy data
 -- Target: (localdb)\MSSQLLocalDB, database [HighFidelity]
--- Idempotent: safe to re-run (drops and recreates the five tables).
+-- Idempotent: safe to re-run (drops and recreates the six tables).
 --
 -- Run:
 --   sqlcmd -S "(localdb)\MSSQLLocalDB" -d HighFidelity -i Api\database\seed.sql
@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS dbo.RevenueCards;
 DROP TABLE IF EXISTS dbo.Activities;
 DROP TABLE IF EXISTS dbo.Orders;
 DROP TABLE IF EXISTS dbo.TrafficSources;
+DROP TABLE IF EXISTS dbo.Users;
 GO
 
 CREATE TABLE dbo.DashboardCards (
@@ -63,6 +64,13 @@ CREATE TABLE dbo.TrafficSources (
     Source          NVARCHAR(100) NOT NULL,
     Percentage      FLOAT         NOT NULL,
     SegmentColorHex CHAR(7)       NOT NULL
+);
+
+CREATE TABLE dbo.Users (
+    Id           INT IDENTITY(1,1) PRIMARY KEY,
+    Username     NVARCHAR(50)  NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(200) NOT NULL,
+    CreatedAtUtc DATETIME2     NOT NULL
 );
 GO
 
@@ -127,11 +135,20 @@ INSERT INTO dbo.TrafficSources (Source, Percentage, SegmentColorHex) VALUES
 (N'Facebook',      34, '#2196F3'),
 (N'Youtube',       55, '#FF5722'),
 (N'Direct Search', 11, '#FFC107');
+
+-- Demo login: admin / ChangeMe123!
+-- PasswordHash is the ASP.NET Core Identity PasswordHasher<T> output (PBKDF2,
+-- salted) for that password — generated once via a throwaway console app, not
+-- typed in by hand. Change the password by generating a fresh hash the same
+-- way (see docs/ARCHITECTURE.md#authentication) and updating this row.
+INSERT INTO dbo.Users (Username, PasswordHash, CreatedAtUtc) VALUES
+(N'admin', N'AQAAAAIAAYagAAAAEIK69S7+L1t/3oVtC9tpAKXRVITRdEY5cPoj66owFv6iU+lcR6gdyfdPqqQ/cK5ziQ==', SYSUTCDATETIME());
 GO
 
 SELECT 'DashboardCards' AS TableName, COUNT(*) AS Rows FROM dbo.DashboardCards
 UNION ALL SELECT 'RevenueCards',   COUNT(*) FROM dbo.RevenueCards
 UNION ALL SELECT 'Activities',     COUNT(*) FROM dbo.Activities
 UNION ALL SELECT 'Orders',         COUNT(*) FROM dbo.Orders
-UNION ALL SELECT 'TrafficSources', COUNT(*) FROM dbo.TrafficSources;
+UNION ALL SELECT 'TrafficSources', COUNT(*) FROM dbo.TrafficSources
+UNION ALL SELECT 'Users',          COUNT(*) FROM dbo.Users;
 GO

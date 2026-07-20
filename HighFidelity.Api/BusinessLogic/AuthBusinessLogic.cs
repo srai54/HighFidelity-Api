@@ -1,40 +1,53 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using HighFidelity.Api.Configuration;
 using HighFidelity.Api.DTOs;
+using HighFidelity.Api.Models;
+using HighFidelity.Api.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HighFidelity.Api.BusinessLogic;
 
 /// <summary>
-/// Demo credential check + JWT issuing. There's no Users table yet, so this
-/// validates against the single account in the "DemoUser" config section —
-/// see docs/ARCHITECTURE.md for how to swap this for an EF-backed user store.
+/// Checks credentials against the "Users" table (PBKDF2 via PasswordHasher&lt;T&gt;,
+/// no third-party auth library involved — see docs/ARCHITECTURE.md) and issues a JWT.
 /// </summary>
 public class AuthBusinessLogic : IAuthBusinessLogic
 {
-    private readonly JwtOptions _jwtOptions;
-    private readonly DemoUserOptions _demoUser;
+    // Verified against on a "no such user" lookup so a login attempt takes
+    // roughly the same time whether or not the username exists — otherwise
+    // response time alone reveals which usernames are registered.
+    private const string DummyPasswordHash =
+        "AQAAAAIAAYagAAAAEIK69S7+L1t/3oVtC9tpAKXRVITRdEY5cPoj66owFv6iU+lcR6gdyfdPqqQ/cK5ziQ==";
 
-    public AuthBusinessLogic(IOptions<JwtOptions> jwtOptions, IOptions<DemoUserOptions> demoUser)
+    private readonly JwtOptions _jwtOptions;
+    private readonly IUserRepository _userRepository;
+    private readonly PasswordHasher<User> _passwordHasher = new();
+
+    public AuthBusinessLogic(IOptions<JwtOptions> jwtOptions, IUserRepository userRepository)
     {
         _jwtOptions = jwtOptions.Value;
-        _demoUser = demoUser.Value;
+        _userRepository = userRepository;
     }
 
-    public LoginResponseDto? Login(string username, string password)
+    public async Task<LoginResponseDto?> LoginAsync(string username, string password)
     {
-        if (!FixedTimeEquals(username, _demoUser.Username) || !FixedTimeEquals(password, _demoUser.Password))
+        var user = await _userRepository.GetByUsernameAsync(username);
+
+        var result = _passwordHasher.VerifyHashedPassword(
+            user ?? new User(), user?.PasswordHash ?? DummyPasswordHash, password);
+
+        if (user is null || result == PasswordVerificationResult.Failed)
             return null;
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes);
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -51,8 +64,4 @@ public class AuthBusinessLogic : IAuthBusinessLogic
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
         return new LoginResponseDto(tokenString, expiresAtUtc);
     }
-
-    // Avoids leaking username/password validity via response-time differences.
-    private static bool FixedTimeEquals(string a, string b) =>
-        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
 }

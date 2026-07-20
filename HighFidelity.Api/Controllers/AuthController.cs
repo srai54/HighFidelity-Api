@@ -15,9 +15,9 @@ public class AuthController : ControllerBase
 
     /// <summary>Exchanges username/password for a JWT bearer token.</summary>
     [HttpPost("login")]
-    public ActionResult<LoginResponseDto> Login([FromBody] LoginRequestDto request)
+    public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto request)
     {
-        var result = _authBusinessLogic.Login(request.Username, request.Password);
+        var result = await _authBusinessLogic.LoginAsync(request.Username, request.Password);
         return result is null
             ? Unauthorized(new { error = "Invalid username or password." })
             : Ok(result);

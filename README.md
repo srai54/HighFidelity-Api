@@ -14,7 +14,7 @@ Data/           → AppDbContext — EF Core model configuration.
 Models/         → EF Core entities, mirror the SQL tables.
 DTOs/           → Wire contracts returned to clients (never the raw entities).
 Mappings/       → Manual entity → DTO conversion.
-Configuration/  → Strongly-typed options bound from appsettings.json (Jwt, DemoUser).
+Configuration/  → Strongly-typed options bound from appsettings.json (Jwt).
 Migrations/     → EF Core schema history.
 ```
 
@@ -40,7 +40,7 @@ Interactive docs: `GET /swagger` (Swagger UI, on in every environment).
 
 ## Authentication
 
-`POST /api/auth/login` with the demo account (`DemoUser` in `appsettings.json`, default `admin` / `ChangeMe123!`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication).
+`POST /api/auth/login` with the demo account (a seeded row in `dbo.Users`, default `admin` / `ChangeMe123!` — see `database/seed.sql`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication).
 
 ## Running locally
 

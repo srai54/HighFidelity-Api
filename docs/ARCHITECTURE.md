@@ -57,7 +57,9 @@ The trade-off is more files for a small project. For a dashboard with one entity
 
 `POST /api/auth/login` exchanges a username/password for a JWT (HMAC-SHA256, signed with `Jwt:Key` from `appsettings.json`). All `DashboardController` endpoints carry `[Authorize]`, so every request needs `Authorization: Bearer <token>`. `AuthController` and `HealthController` stay anonymous — you need to be able to log in and to health-check before you have a token.
 
-`AuthBusinessLogic.Login` checks credentials against **one hardcoded account** (`DemoUser` config section), not a database table. `CryptographicOperations.FixedTimeEquals` is used for the comparison instead of `==`/`string.Equals` so a bad guess doesn't return measurably faster/slower depending on how many characters matched (a timing side-channel) — cheap to do, worth knowing why it's there if asked.
+`AuthBusinessLogic.LoginAsync` checks credentials against the `dbo.Users` table (`Models/User.cs`, via `IUserRepository`) — no third-party auth library involved. Passwords are hashed with `Microsoft.AspNetCore.Identity`'s `PasswordHasher<T>` (PBKDF2, salted; part of the `Microsoft.Extensions.Identity.Core` package, which is just the hashing primitive — not the full ASP.NET Core Identity framework with `UserManager`/`SignInManager`/EF stores, which would be a lot of machinery for one login endpoint). `PasswordHasher.VerifyHashedPassword` does the comparison in constant time internally.
+
+If the username doesn't exist, `AuthBusinessLogic` still runs the hasher against a fixed dummy hash before returning "invalid" — otherwise a real lookup failing fast (no user found → skip hashing) makes response time itself leak which usernames are registered.
 
 ### Why JWT and not cookies/sessions
 
@@ -70,16 +72,13 @@ Authorization: Bearer eyJhbGciOi...
 ### Known limitations (by design, for a demo — not oversights)
 
 1. **`Jwt:Key` lives in `appsettings.json`, checked into git.** Fine for local dev; in a real deployment this must move to User Secrets (dev), environment variables, or Azure Key Vault/AWS Secrets Manager (prod). Never ship a real signing key in source control.
-2. **One hardcoded user, plaintext password in config.** There's no `Users` table yet. To make this production-grade:
-   - Add a `User` entity/migration (`Id`, `Username`, `PasswordHash`, `PasswordSalt` or use `Microsoft.AspNetCore.Identity.PasswordHasher<T>`)
-   - Add `IUserRepository` + wire it into `AuthBusinessLogic` instead of `DemoUserOptions`
-   - Add a `POST /api/auth/register` endpoint if self-service signup is needed
+2. **No self-service registration.** There's exactly one seeded row in `dbo.Users` (`database/seed.sql`, username `admin`) — real accounts still have to be inserted by hand. Adding a `POST /api/auth/register` endpoint that calls `PasswordHasher<T>.HashPassword` and inserts through `IUserRepository` is a small, natural addition on top of what's here now.
 3. **No refresh tokens.** The token just expires (`Jwt:ExpiryMinutes`, default 60) and the client re-logs in — see `AuthTokenHandler` on the MAUI side. A refresh-token flow would avoid re-sending the password, at the cost of a second token type and a revocation story.
-4. **No role/claim-based authorization.** Everything with a valid token can hit every dashboard endpoint. `[Authorize(Roles = "Admin")]` plus a `role` claim in `AuthBusinessLogic.Login` is the natural next step once there's more than one type of user.
+4. **No role/claim-based authorization.** Everything with a valid token can hit every dashboard endpoint. `[Authorize(Roles = "Admin")]` plus a `role` claim (and column) on `User` is the natural next step once there's more than one type of user.
 
 ### Client side (MAUI app)
 
-The MAUI app doesn't have a login screen — `Services/AuthTokenHandler.cs` is an `HttpMessageHandler` that logs in against the demo account on first use, caches the token, and re-logs in a minute before it expires. This keeps the "demo, single hardcoded account" shape consistent end-to-end: the moment the backend grows real user accounts, the client's login call is the only thing that needs a UI in front of it.
+The MAUI app doesn't have a login screen — `Services/AuthTokenHandler.cs` is an `HttpMessageHandler` that logs in against the seeded `admin` account on first use, caches the token, and re-logs in a minute before it expires. The moment there's a real registration flow, the client's login call is the only thing that needs a UI in front of it.
 
 ## Reliability features
 

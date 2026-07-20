@@ -56,7 +56,7 @@ The response contains a `token` — pass it as `Authorization: Bearer <token>` o
 
 **In Swagger UI**: click the **Authorize** button (top right), paste just the token (no `Bearer ` prefix — Swagger adds it) into the value field, click **Authorize**, then **Close**. Every request Swagger sends afterward carries the header automatically.
 
-Demo credentials live in `appsettings.json` under `DemoUser` — change them there for your own environment.
+The demo account (`admin` / `ChangeMe123!`) is a row in `dbo.Users`, seeded by `database/seed.sql` — it exists once you've run the seed step above. To change the password or add another account, generate a new `PasswordHasher<T>` hash and update/insert the row (see [ARCHITECTURE.md#authentication](ARCHITECTURE.md#authentication)).
 
 ## 7. Running the MAUI dashboard against this API
 
