@@ -43,18 +43,7 @@ Open `http://localhost:5199/swagger` — it's on in every environment (Developme
 
 ## 6. Get a JWT and call a protected endpoint
 
-Dashboard endpoints require a Bearer token (see [ARCHITECTURE.md](ARCHITECTURE.md#authentication)). Log in with the demo account first:
-
-```http
-POST http://localhost:5199/api/auth/login
-Content-Type: application/json
-
-{ "username": "admin", "password": "ChangeMe123!" }
-```
-
-The response contains a `token` — pass it as `Authorization: Bearer <token>` on subsequent requests, e.g. `GET /api/dashboard/cards`.
-
-**In Swagger UI**: click the **Authorize** button (top right), paste just the token (no `Bearer ` prefix — Swagger adds it) into the value field, click **Authorize**, then **Close**. Every request Swagger sends afterward carries the header automatically.
+Dashboard endpoints require a Bearer token (see [ARCHITECTURE.md](ARCHITECTURE.md#authentication)). For the full click-by-click walkthrough — getting a token, authorizing Swagger with it, curl/Postman equivalents, troubleshooting a stray `401` — see **[API_TESTING.md](API_TESTING.md)**.
 
 The demo account (`admin` / `ChangeMe123!`) is a row in `dbo.Users`, seeded by `database/seed.sql` — it exists once you've run the seed step above. To change the password or add another account, generate a new `PasswordHasher<T>` hash and update/insert the row (see [ARCHITECTURE.md#authentication](ARCHITECTURE.md#authentication)).
 

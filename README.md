@@ -18,7 +18,7 @@ Configuration/  → Strongly-typed options bound from appsettings.json (Jwt).
 Migrations/     → EF Core schema history.
 ```
 
-Each arrow is an interface (`IDashboardBusinessLogic`, `IDashboardRepository`), so every layer is independently testable and swappable. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full why/what, and [docs/INTERVIEW_QUESTIONS.md](docs/INTERVIEW_QUESTIONS.md) for a Q&A walkthrough of the design decisions.
+Each arrow is an interface (`IDashboardBusinessLogic`, `IDashboardRepository`), so every layer is independently testable and swappable. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full why/what, [docs/API_TESTING.md](docs/API_TESTING.md) for how to actually exercise the API (get a token, call protected endpoints), and [docs/INTERVIEW_QUESTIONS.md](docs/INTERVIEW_QUESTIONS.md) for a Q&A walkthrough of the design decisions.
 
 ## Endpoints
 
@@ -40,7 +40,7 @@ Interactive docs: `GET /swagger` (Swagger UI, on in every environment).
 
 ## Authentication
 
-`POST /api/auth/login` with the demo account (a seeded row in `dbo.Users`, default `admin` / `ChangeMe123!` — see `database/seed.sql`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication).
+`POST /api/auth/login` with the demo account (a seeded row in `dbo.Users`, default `admin` / `ChangeMe123!` — see `database/seed.sql`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication) — for the click-by-click Swagger/curl/Postman steps to actually get and use a token, see [docs/API_TESTING.md](docs/API_TESTING.md).
 
 ## Running locally
 
