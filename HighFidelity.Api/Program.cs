@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using HighFidelity.Api.Configuration;
 using HighFidelity.Api.Data;
 using HighFidelity.Api.Repositories;
@@ -60,7 +61,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+// ── Swagger ──
+// Left on in every environment (not just Development) so it's always at
+// /swagger regardless of how the app is launched — this is a demo API, not
+// a service with something to hide behind an environment check.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "HighFidelity.Api", Version = "v1" });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste the token from POST /api/auth/login (no 'Bearer ' prefix needed here)."
+    });
+    options.AddSecurityRequirement(document =>
+    {
+        var bearerRef = new OpenApiSecuritySchemeReference("Bearer", document);
+        return new OpenApiSecurityRequirement { [bearerRef] = [] };
+    });
+});
+
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "HighFidelity.Api v1"));
 
 // ── Centralized error handling ──
 // Any exception that escapes a controller (DB unreachable, unexpected bug)

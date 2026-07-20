@@ -1,6 +1,6 @@
 # HighFidelity.Api
 
-Backend API for the [HighFidelity MAUI Dashboard](https://github.com/srai54/-MauiHighFidelityDashboard) — a layered ASP.NET Core Web API backed by SQL Server via EF Core.
+Backend API for the [HighFidelity MAUI Dashboard](https://github.com/srai54/HighFidelity-Ui) — a layered ASP.NET Core Web API backed by SQL Server via EF Core.
 
 This repo was split out of the MAUI app's monorepo once the backend became its own deployable concern; see [History](#history) below for why and how.
 
@@ -36,6 +36,8 @@ All `/api/dashboard/*` endpoints require a JWT — see [Authentication](#authent
 | `GET /api/dashboard/traffic` | Traffic source distribution |
 | `GET /health` | Readiness probe — checks actual DB connectivity |
 
+Interactive docs: `GET /swagger` (Swagger UI, on in every environment).
+
 ## Authentication
 
 `POST /api/auth/login` with the demo account (`DemoUser` in `appsettings.json`, default `admin` / `ChangeMe123!`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication).
@@ -63,8 +65,8 @@ Default connection string (`HighFidelity.Api/appsettings.json`) targets `(locald
 
 ## Consumers
 
-The [MAUI dashboard app](https://github.com/srai54/-MauiHighFidelityDashboard) is the current client, talking to this API over HTTP/JSON via `IDashboardDataService` — no shared source, only the HTTP contract above.
+The [MAUI dashboard app](https://github.com/srai54/HighFidelity-Ui) is the current client, talking to this API over HTTP/JSON via `IDashboardDataService` — no shared source, only the HTTP contract above.
 
 ## History
 
-This backend started as a Dapper-based Minimal API inside the MAUI app's repo, was rewritten into this layered Controller/Service/Repository architecture with EF Core, and was then split into its own repo so it can be versioned, deployed, and (eventually) consumed by more than one client independently of the mobile app's release cycle. Git history from the original monorepo commits is preserved here via `git subtree split`.
+This backend started as a Dapper-based Minimal API inside the MAUI app's repo, was rewritten into this layered Controller/BusinessLogic/Repository architecture with EF Core, and was then split into its own repo so it can be versioned, deployed, and (eventually) consumed by more than one client independently of the mobile app's release cycle. Git history from the original monorepo commits is preserved here via `git subtree split`.

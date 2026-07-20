@@ -37,7 +37,11 @@ Press **F5** (or **Ctrl+F5** to run without the debugger attached). Visual Studi
 
 You should see console output confirming the app is listening on port 5199. Hit `http://localhost:5199/health` to confirm it can reach the database — it should return `200 OK` with a JSON body, not just process liveness.
 
-## 5. Get a JWT and call a protected endpoint
+## 5. Swagger UI
+
+Open `http://localhost:5199/swagger` — it's on in every environment (Development, Production, however you launch it), not gated behind an environment check, since this is a demo API rather than something with an internal surface to hide.
+
+## 6. Get a JWT and call a protected endpoint
 
 Dashboard endpoints require a Bearer token (see [ARCHITECTURE.md](ARCHITECTURE.md#authentication)). Log in with the demo account first:
 
@@ -50,15 +54,17 @@ Content-Type: application/json
 
 The response contains a `token` — pass it as `Authorization: Bearer <token>` on subsequent requests, e.g. `GET /api/dashboard/cards`.
 
+**In Swagger UI**: click the **Authorize** button (top right), paste just the token (no `Bearer ` prefix — Swagger adds it) into the value field, click **Authorize**, then **Close**. Every request Swagger sends afterward carries the header automatically.
+
 Demo credentials live in `appsettings.json` under `DemoUser` — change them there for your own environment.
 
-## 6. Running the MAUI dashboard against this API
+## 7. Running the MAUI dashboard against this API
 
-The [MauiHighFidelityDashboard](https://github.com/srai54/-MauiHighFidelityDashboard) app is a separate repo/solution and is the actual consumer of this API:
+The [HighFidelity-Ui](https://github.com/srai54/HighFidelity-Ui) app is a separate repo/solution and is the actual consumer of this API:
 
 1. Clone it alongside this repo.
 2. Make sure `HighFidelity.Api` is already running (steps above) — the MAUI app has no embedded data and shows nothing until the API responds.
-3. Open `MauiHighFidelityDashboard.sln` in Visual Studio, set the MAUI project as startup, pick a target (Windows Machine is the simplest for local dev), and press F5.
+3. Open `HighFidelity.Ui.slnx` in Visual Studio, set the MAUI project as startup, pick a target (Windows Machine is the simplest for local dev), and press F5.
 4. The app logs in automatically against the same demo account on startup (see `Services/AuthTokenHandler.cs`) and attaches the JWT to every API call — no manual login step needed on the client.
 
 ## Troubleshooting
