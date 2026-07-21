@@ -1,11 +1,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using HighFidelity.Api.Configuration;
-using HighFidelity.Api.Data;
 using HighFidelity.Api.Repositories;
 using HighFidelity.Api.BusinessLogic;
 
@@ -20,21 +18,20 @@ builder.Services.AddControllers()
             System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
-// ── EF Core ──
-var connectionString = builder.Configuration.GetConnectionString("HighFidelity")
-    ?? throw new InvalidOperationException("Connection string 'HighFidelity' is missing.");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-        // Transient network/deadlock errors retry automatically instead of
-        // surfacing as a 500 on the first blip.
-        sql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null)));
-
 // ── Dependency Injection — Layered Architecture ──
-// Each layer depends on the one below it through interfaces:
-//   Controller → BusinessLogic (BL) → Repository → DbContext → SQL Server
-builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+// This is the demo-in-memory branch: no SQL Server, no connection string, no
+// AppDbContext. Only the Repository layer differs from the main branch —
+// InMemoryDashboardRepository/InMemoryUserRepository hold hardcoded data
+// (mirrors database/seed.sql) instead of querying LocalDB. Everything above
+// Repositories (BusinessLogic, Controllers, JWT, Swagger) is unchanged, which
+// is the point: the Repository interface is exactly the seam meant to absorb
+// a storage swap like this.
+//
+// Singleton (not Scoped) so in-memory adds/deletes persist across requests
+// for the life of the process, the way SQL rows would.
+builder.Services.AddSingleton<IDashboardRepository, InMemoryDashboardRepository>();
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddScoped<IDashboardBusinessLogic, DashboardBusinessLogic>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthBusinessLogic, AuthBusinessLogic>();
 
 // ── JWT Authentication ──

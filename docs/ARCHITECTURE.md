@@ -95,6 +95,20 @@ The MAUI app doesn't have a login screen — `Services/AuthTokenHandler.cs` is a
 - Centralized `UseExceptionHandler` in `Program.cs` — any exception that escapes a controller becomes a consistent JSON error shape, and only leaks the exception message in `Development`.
 - `/health` calls `Database.CanConnectAsync()` — a green health check means the database is actually reachable, not just that the process is alive.
 
+(The last two bullets describe the `highfidelity-backend` branch specifically — see below for what changes on `demo-in-memory`.)
+
+## demo-in-memory branch
+
+A second branch, `demo-in-memory`, exists purely so this API can be demoed — to a team, an interviewer, whoever — with zero setup: no SQL Server, no LocalDB instance, no `seed.sql` to run. Clone it and `dotnet run`.
+
+**What changes:** exactly two things.
+1. `Repositories/DashboardRepository.cs` and `Repositories/UserRepository.cs` (both EF/SQL-backed) are swapped in `Program.cs` for `InMemoryDashboardRepository`/`InMemoryUserRepository` — plain C# classes holding hardcoded `List<T>`s that mirror `database/seed.sql` exactly (same rows, same Font Awesome icon codepoints, same demo login), registered as `Singleton` instead of `Scoped` so in-memory adds/deletes from `POST`/`DELETE /api/dashboard/orders` persist for the life of the process, the way SQL rows would.
+2. `Program.cs` drops the `AddDbContext`/connection-string wiring, and `HealthController` no longer pings a database (there isn't one) — it just confirms the process is up.
+
+**What doesn't change:** `Controllers/`, `BusinessLogic/`, JWT auth, Swagger, the DTOs — literally everything above the `Repository` layer. That's not an accident, it's the actual payoff of the architecture: `IDashboardRepository`/`IUserRepository` are the seam the rest of the app was built to depend on only through an interface, so swapping what's behind them is a two-new-files-plus-one-changed-file diff, not a rewrite. If this project is ever asked about "why bother with a Repository interface for a single data source," this branch is the concrete answer.
+
+This is a demo convenience, not a testing strategy — it's not what unit tests should mock (that'd normally be a proper test double, not a hand-maintained hardcoded dataset), and it's not meant to be kept in sync feature-for-feature forever. It exists because "clone and run, no setup" has real value for a live demo.
+
 ## Why this is a separate repo from the MAUI app
 
 This backend started inside the MAUI app's repo as a Dapper-based Minimal API, then got rewritten into the current layered architecture with EF Core, then was split out entirely (`git subtree split`, history preserved) once it became clear it's a separately deployable, separately versioned concern — the MAUI app is *a* client, not *the* app. Splitting means this API can be deployed, scaled, and given its own release cadence without coupling to mobile app store review cycles, and could serve a web or additional mobile client later without any shared source, only the HTTP contract documented in the root `README.md`.

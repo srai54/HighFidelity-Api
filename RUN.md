@@ -1,14 +1,6 @@
 # Running this repo (quick reference)
 
-For the full walkthrough (seeding the DB, Visual Studio, JWT login) see [docs/RUNNING_IN_VISUAL_STUDIO.md](docs/RUNNING_IN_VISUAL_STUDIO.md). This file is just the fast path.
-
-## One-time setup
-
-Seed the database (only needed once, or after pulling a schema change):
-
-```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d HighFidelity -i database\seed.sql
-```
+This is the `demo-in-memory` branch — data is hardcoded in `Repositories/InMemoryDashboardRepository.cs`/`InMemoryUserRepository.cs`, mirroring `database/seed.sql`. **No database setup, no LocalDB, no seed step.** (On `highfidelity-backend`, the SQL-backed branch, see [docs/RUNNING_IN_VISUAL_STUDIO.md](docs/RUNNING_IN_VISUAL_STUDIO.md) for the seeding step this branch skips.)
 
 ## Every time — from a terminal
 

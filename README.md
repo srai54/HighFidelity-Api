@@ -2,6 +2,8 @@
 
 Backend API for the [HighFidelity MAUI Dashboard](https://github.com/srai54/HighFidelity-Ui) — a layered ASP.NET Core Web API backed by SQL Server via EF Core.
 
+> **This is the `demo-in-memory` branch.** Same Controllers/BusinessLogic/JWT/Swagger as `highfidelity-backend` — only the `Repository` layer differs. Data is hardcoded in `InMemoryDashboardRepository`/`InMemoryUserRepository` (mirrors `database/seed.sql` exactly), so there's **no SQL Server, no LocalDB, no seed step** — clone and run. Good for demoing to people who don't want to set up a database first, or when you're offline. Switch to `highfidelity-backend` for the SQL-backed version. See [docs/ARCHITECTURE.md#demo-in-memory-branch](docs/ARCHITECTURE.md#demo-in-memory-branch) for why this is a one-file difference instead of a fork.
+
 This repo was split out of the MAUI app's monorepo once the backend became its own deployable concern; see [History](#history) below for why and how.
 
 ## Architecture
@@ -43,17 +45,13 @@ Interactive docs: `GET /swagger` (Swagger UI, on in every environment).
 
 ## Running locally
 
-See [docs/RUNNING_IN_VISUAL_STUDIO.md](docs/RUNNING_IN_VISUAL_STUDIO.md) for the full Visual Studio walkthrough (seeding the DB, running both this API and the MAUI client, logging in). Quick version:
+No database setup on this branch — just:
 
 ```powershell
-# 1. Seed the database (SQL Server / LocalDB)
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d HighFidelity -i database\seed.sql
-
-# 2. Run the API
 dotnet run --project HighFidelity.Api
 ```
 
-Default connection string (`HighFidelity.Api/appsettings.json`) targets `(localdb)\MSSQLLocalDB`, database `HighFidelity`, port `5199`. Override via `ConnectionStrings:HighFidelity` for a different SQL Server instance.
+Listens on port `5199`. (The SQL-backed version's walkthrough — seeding the DB, Visual Studio, JWT login — is [docs/RUNNING_IN_VISUAL_STUDIO.md](docs/RUNNING_IN_VISUAL_STUDIO.md), written for the `highfidelity-backend` branch; the seeding step doesn't apply here, everything else does.)
 
 ## Reliability features
 
