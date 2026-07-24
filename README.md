@@ -37,9 +37,38 @@ All `/api/dashboard/*` endpoints require a JWT — see [Authentication](#authent
 
 Interactive docs: `GET /swagger` (Swagger UI, on in every environment).
 
+## Quick Start (tl;dr)
+
+```bash
+# 1. Seed the database
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d HighFidelity -i database\seed.sql
+
+# 2. Run the API
+dotnet run --project HighFidelity.Api
+
+# 3. Login (default credentials)
+curl -X POST http://localhost:5199/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"ChangeMe123!"}'
+# → returns a JWT token
+
+# 4. Call any dashboard endpoint with the token
+curl http://localhost:5199/api/dashboard/cards \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+> Or open **http://localhost:5199/swagger** in a browser, use the `POST /api/auth/login` endpoint to get a token, then click the green **Authorize** button (top-right) and paste it in.
+
 ## Authentication
 
-`POST /api/auth/login` with the demo account (a seeded row in `dbo.Users`, default `admin` / `ChangeMe123!` — see `database/seed.sql`) returns a JWT. Send it as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication) — for the click-by-click Swagger/curl/Postman steps to actually get and use a token, see [docs/API_TESTING.md](docs/API_TESTING.md).
+`POST /api/auth/login` with the demo account (a seeded row in `dbo.Users`) returns a JWT.
+
+| Credential | Value |
+|---|---|
+| **Username** | `admin` |
+| **Password** | `ChangeMe123!` |
+
+Send the token as `Authorization: Bearer <token>` on every `/api/dashboard/*` call. Full design rationale and known limitations are in [docs/ARCHITECTURE.md#authentication](docs/ARCHITECTURE.md#authentication) — for the click-by-click Swagger/curl/Postman steps, see [docs/API_TESTING.md](docs/API_TESTING.md).
 
 ## Running locally
 

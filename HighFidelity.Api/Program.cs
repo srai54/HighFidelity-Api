@@ -11,6 +11,9 @@ using HighFidelity.Api.BusinessLogic;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Application Insights ──
+builder.Services.AddApplicationInsightsTelemetry();
+
 // ── Controllers ──
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
