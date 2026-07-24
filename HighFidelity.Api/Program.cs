@@ -8,8 +8,14 @@ using HighFidelity.Api.Configuration;
 using HighFidelity.Api.Data;
 using HighFidelity.Api.Repositories;
 using HighFidelity.Api.BusinessLogic;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Azure Key Vault (overrides appsettings.json) ──
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://highfidelityapi01.vault.azure.net/"),
+    new DefaultAzureCredential());
 
 // ── Application Insights ──
 builder.Services.AddApplicationInsightsTelemetry();
